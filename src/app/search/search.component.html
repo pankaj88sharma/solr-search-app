@@ -1,0 +1,62 @@
+<div *ngIf="res" class="row">
+<div class="col-3 facet">
+  <h2>Refine by</h2>
+    <ul>
+        <li *ngFor="let facetField of facetFields">
+          <h4 *ngIf="facetField.facetDetails.length > 0">{{facetField.field}}</h4>
+  <ul>
+    <li class="inner-li" *ngFor="let facetDetail of facetField.facetDetails">
+        <input #selection type="checkbox" name="{{facetDetail.value}}" [checked]="facetDetail.checked" (change)="onFacetSelection(selection.checked, facetField.field, facetDetail.value, $event)" /> {{facetDetail.value}}
+						({{facetDetail.count}})
+    </li>
+  </ul>
+</li>
+</ul>
+</div>
+
+<div class="col-9">
+<div class="search">
+    <input #searchedText id="search-box" (keyup)="getSuggestionsOrExecuteSearch(searchedText.value, $event)" />
+    <span class=sort-by>Sort by <select [(ngModel)]="selectedSortField" (change)="onSortFieldChange()">
+        <option *ngFor="let sortField of sortFields" [ngValue]="sortField">{{sortField.value}}</option>
+        </select></span>
+  <div class="suggestions-result" *ngIf="suggestions.length > 0">
+    <ul class="search-result">
+        <li *ngFor="let term of suggestions" (click)="selectedSuggestTerm(term,searchedText)">
+            {{term}}
+        </li>
+      </ul>
+  </div>
+</div>
+
+<div class="res-header">
+  {{res.response.numFound}} results found.
+  <span *ngIf="res.response.numFound > 0" >
+    <a *ngIf="start != 0" (click)="showPreviousPageResults()"> <b>previous </b> </a>
+    Page {{pageNo}} of {{totalPages}} 
+    <a *ngIf="pageNo != totalPages" (click)="showNextPageResults()"> <b>next </b> </a>
+  </span>
+  </div>
+ <div class="docs-result" *ngFor="let doc of res.response.docs">
+   <div><b>{{doc.name}}</b>
+     </div>
+     <div>Id: {{doc.id}}
+      </div>
+      <div>Price: {{doc.price_c}}
+        </div>
+        <div>Features: {{doc.features}}
+          </div>
+          <div>In stock: {{doc.inStock}}
+            </div>
+ </div>
+
+ <div class="res-footer">
+    {{res.response.numFound}} results found.
+    <span *ngIf="res.response.numFound > 0" >
+      <a *ngIf="start != 0" (click)="showPreviousPageResults()"> <b>previous </b> </a>
+      Page {{pageNo}} of {{totalPages}} 
+      <a *ngIf="pageNo != totalPages" (click)="showNextPageResults()"> <b>next </b> </a>
+    </span>
+    </div>
+
+</div>
