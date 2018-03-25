@@ -9,9 +9,9 @@ import { catchError, map, tap } from 'rxjs/operators';
 @Injectable()
 export class SolrSearchService {
 
-  private solrUrl = 'http://ec2-52-15-231-144.us-east-2.compute.amazonaws.com:8983/solr/techproducts/select?&facet.field=cat&facet=on&facet.limit=10&facet.field=genre_s&facet.mincount=1';  // URL to solr api
+  private solrUrl = 'http://ec2-18-216-15-131.us-east-2.compute.amazonaws.com:8983/solr/techproducts/select?&facet.field=cat&facet=on&facet.limit=10&facet.field=genre_s&facet.mincount=1';  // URL to solr api
 
-  private solrSuggestUrl = 'http://ec2-52-15-231-144.us-east-2.compute.amazonaws.com:8983/solr/techproducts/terms?terms.fl=name&terms.fl=genre_s&terms.fl=title&terms.fl=cat&&terms.prefix=';  // URL to solr api
+  private solrSuggestUrl = 'http://ec2-18-216-15-131.us-east-2.compute.amazonaws.com:8983/solr/techproducts/terms?terms.fl=name&terms.fl=genre_s&terms.fl=title&terms.fl=cat&&terms.prefix=';  // URL to solr api
   constructor(private http: HttpClient) { }
 
   
