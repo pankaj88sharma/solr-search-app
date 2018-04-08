@@ -1,62 +1,123 @@
-<div *ngIf="res" class="row">
-<div class="col-3 facet">
-  <h2>Refine by</h2>
-    <ul>
-        <li *ngFor="let facetField of facetFields">
-          <h4 *ngIf="facetField.facetDetails.length > 0">{{facetField.field}}</h4>
-  <ul>
-    <li class="inner-li" *ngFor="let facetDetail of facetField.facetDetails">
-        <input #selection type="checkbox" name="{{facetDetail.value}}" [checked]="facetDetail.checked" (change)="onFacetSelection(selection.checked, facetField.field, facetDetail.value, $event)" /> {{facetDetail.value}}
-						({{facetDetail.count}})
-    </li>
-  </ul>
-</li>
-</ul>
-</div>
+<div class="container-fluid">
 
-<div class="col-9">
-<div class="search">
-    <input #searchedText id="search-box" (keyup)="getSuggestionsOrExecuteSearch(searchedText.value, $event)" />
-    <span class=sort-by>Sort by <select [(ngModel)]="selectedSortField" (change)="onSortFieldChange()">
-        <option *ngFor="let sortField of sortFields" [ngValue]="sortField">{{sortField.value}}</option>
-        </select></span>
-  <div class="suggestions-result" *ngIf="suggestions.length > 0">
-    <ul class="search-result">
-        <li *ngFor="let term of suggestions" (click)="selectedSuggestTerm(term,searchedText)">
-            {{term}}
-        </li>
-      </ul>
-  </div>
-</div>
+  <div class="row " *ngIf="res">
 
-<div class="res-header">
-  {{res.response.numFound}} results found.
-  <span *ngIf="res.response.numFound > 0" >
-    <a *ngIf="start != 0" (click)="showPreviousPageResults()"> <b>previous </b> </a>
-    Page {{pageNo}} of {{totalPages}} 
-    <a *ngIf="pageNo != totalPages" (click)="showNextPageResults()"> <b>next </b> </a>
-  </span>
-  </div>
- <div class="docs-result" *ngFor="let doc of res.response.docs">
-   <div><b>{{doc.name}}</b>
-     </div>
-     <div>Id: {{doc.id}}
-      </div>
-      <div>Price: {{doc.price_c}}
+    <div class="col-md-4 col-lg-3 text-dark border-right">
+      <div class="row">
+          <div class="col-md-8 mt-3" *ngIf="windowWidth >= 768">
+        <h3 class="text-secondary">Filter by</h3>
         </div>
-        <div>Features: {{doc.features}}
-          </div>
-          <div>In stock: {{doc.inStock}}
-            </div>
- </div>
-
- <div class="res-footer">
-    {{res.response.numFound}} results found.
-    <span *ngIf="res.response.numFound > 0" >
-      <a *ngIf="start != 0" (click)="showPreviousPageResults()"> <b>previous </b> </a>
-      Page {{pageNo}} of {{totalPages}} 
-      <a *ngIf="pageNo != totalPages" (click)="showNextPageResults()"> <b>next </b> </a>
-    </span>
+        <div *ngIf="windowWidth < 768" class="col-md-4 mt-3">
+            <button class="btn btn-outline-secondary" type="button" (click)="hideFilters()">
+               Filter by <i class="fa" [ngClass]="{ 'fa-chevron-circle-up': showFiltersBool, 'fa-chevron-circle-down': !showFiltersBool  }"></i>
+              </button>
+        </div>
+      </div>
+      <div class="row">
+          <div class="col-md-12">
+        <ul *ngIf="facetFields.length > 0 && showFiltersBool" [ngClass]="{ 'facets bg-dark text-white border rounded p-2': windowWidth < 768  }" class="list-unstyled mt-2" style="font-size:14px;">
+          <li *ngFor="let facetField of facetFields">
+            <ul *ngIf="facetField.facetDetails.length > 0" class="list-unstyled mt-2 mb-4">
+              <h5>{{facetFieldMap.get(facetField.field)}}</h5>
+              <li *ngFor="let facetDetail of facetField.facetDetails">
+                <input #selection type="checkbox" name="{{facetDetail.value}}" [checked]="facetDetail.checked" (change)="onFacetSelection(selection.checked, facetField.field, facetDetail.value, $event)"
+                /> {{facetDetail.value}}
+                <span class="badge" [ngClass]="{ 'badge-secondary': windowWidth >= 768, 'badge-light': windowWidth < 768  }">{{facetDetail.count}}</span>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      </div>
+      
     </div>
 
+
+
+    <div class="col-md-8 col-lg-9">
+      <div class="row justify-content-center">
+        <div class="col-md-8 mt-3">
+          <div class="input-group">
+            <input #searchedText type="text" class="form-control" placeholder="Search..." (keyup)="getSuggestionsOrExecuteSearch(searchedText.value, $event)"
+              (blur)="onBlurMethod()" />
+
+            <div class="list-group mt-5 col-md-12" [hidden]="suggestions.length == 0" [ngClass]="{'suggestions-result': suggestions.length > 0}" >
+              <a href="#" class="list-group-item list-group-item-action pt-0 pb-0 pl-1 bg-secondary text-white" *ngFor="let term of suggestions"
+                (mousedown)="selectedSuggestTerm(term,searchedText)">{{term}}</a>
+            </div>
+
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" (click)="onSearchButtonClick(searchedText.value)">
+                <i class="fa fa-search"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="row">
+        <div class="col-md-12 mt-4">
+          <ul class="pagination justify-content-center">
+            <li class="page-item mr-2 text-secondary">{{res.response.numFound}} results found for "{{searchQuery}}"</li>
+           
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="row">
+          <div class="col-md-12 text-center">
+              <ul class="list-inline">
+                  <li class="list-inline-item mr-4 font-weight-bold">Sort By </li>
+                  <li *ngFor="let sortField of sortFields" class="list-inline-item mr-4 mt-2"><a href="#" class="list-group-item list-group-item-action pt-0 pb-0 pl-1 pr-1" [ngClass]="{ 'bg-dark text-white': sortField.isSelected  }" (click)="onSortFieldChange(sortField)">{{sortField.value}}</a></li>
+                </ul>
+          </div>
+  
+        </div>
+
+      <div class="row" *ngFor="let doc of res.response.docs">
+        <div class="col-md-12">
+
+         
+            <div class="border rounded bg-light p-2 mb-2 res-grid">
+
+                  <div class="font-weight-bold">{{doc.name}}</div>
+                  <div *ngIf="doc.author_s">Author: {{doc.author_s}}</div>
+                  <div>Price: {{doc.price_c}}</div>
+                  <div *ngIf="doc.features">Features: {{doc.features}}</div>
+
+
+            </div>
+
+               
+
+        </div>
+      </div>
+
+
+      <div class="row">
+        <div class="col-md-12">
+          <ul class="pagination justify-content-center">
+            <li class="page-item">
+              <a *ngIf="start != 0" (click)="showPreviousPageResults()" class="text-secondary" href="#">
+                <i class="fa fa-chevron-circle-left"></i>
+              </a>
+            </li>
+            <li *ngIf="totalPages != 0" class="page-item ml-2 mr-2 text-secondary">Page {{pageNo}} of {{totalPages}}</li>
+            <li class="page-item">
+              <a *ngIf="totalPages != 0 && pageNo != totalPages" (click)="showNextPageResults()" class="text-secondary" href="#">
+                <i class="fa fa-chevron-circle-right"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+  </div>
 </div>

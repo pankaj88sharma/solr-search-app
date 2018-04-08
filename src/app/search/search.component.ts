@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, AfterViewInit } from '@angular/core';
 
 import { SolrSearchService } from '../solr-search.service';
 import { Observable } from 'rxjs/Observable';
 import { FacetField, FacetDetail } from '../facetfield';
-import { SORT_FIELDS} from '../sort';
+import { SortField, SORT_FIELDS} from '../sort';
 
 @Component({
   selector: 'app-search',
@@ -16,6 +16,16 @@ export class SearchComponent implements OnInit {
   resSuggest: any;
   filterQuery: string = '';
 
+  facetFieldMap: Map<string, string> = new Map();
+
+
+
+  windowWidth: number = window.innerWidth;
+
+  numResults : number;
+
+  showFiltersBool: boolean = true;
+
   extractFacetsRequired: boolean = true;
 
   fqMap: Map<string, any[]> = new Map();
@@ -26,6 +36,8 @@ export class SearchComponent implements OnInit {
 
   pageNo: number = 1;
   totalPages: number;
+  firstRec: number = 1;
+  lastRec: number = 10;
 
   searchQuery: string = "*:*";
 
@@ -36,10 +48,22 @@ export class SearchComponent implements OnInit {
  
   constructor(private solrSearchService: SolrSearchService) { }
 
-  onSortFieldChange() {
+  onSortFieldChange(selectedSortField : SortField) {
    // console.log(this.selectedSortField);
     this.extractFacetsRequired = false;
+    this.selectedSortField = selectedSortField;
+    this.selectedSortField.isSelected = true;
+    this.sortFields.forEach((item, index) => {
+    if (index !== this.selectedSortField.id){
+        item.isSelected = false;
+    }
+  }
+  );
     this.getResponse();
+  }
+
+  hideFilters() {
+    this.showFiltersBool = !this.showFiltersBool;
   }
 
   showNextPageResults(){
@@ -48,6 +72,12 @@ export class SearchComponent implements OnInit {
     this.start = num + 10;
     let numPage = this.pageNo;
     this.pageNo = numPage + 1;
+    this.firstRec = this.firstRec + 10;
+    this.lastRec = this.lastRec + 10;
+    if (this.numResults < this.lastRec) {
+      this.lastRec = this.numResults;
+    }
+
     this.getResponse();
   }
 
@@ -57,6 +87,8 @@ export class SearchComponent implements OnInit {
     this.start = num - 10;
     let numPage = this.pageNo;
     this.pageNo = numPage - 1;
+    this.firstRec = this.firstRec - 10;
+    this.lastRec = this.lastRec - 10;
     this.getResponse();
   }
 
@@ -119,6 +151,16 @@ export class SearchComponent implements OnInit {
   console.log(this.filterQuery)
   }
 
+  onSearchButtonClick(query: string) {
+    if(query.length > 0) {
+    this.executeSearch(query);
+    }
+  }
+
+  onBlurMethod() {
+   // console.log("blur");
+    this.suggestions = [];
+  }
 
 getSuggestionsOrExecuteSearch(query: string, event: any) {
 //console.log(query, event);
@@ -158,6 +200,7 @@ else {
           this.res = res;
           console.log(this.res);
           this.totalPages = Math.ceil(this.res.response.numFound/10); 
+          this.numResults = this.res.response.numFound;
           if(this.extractFacetsRequired)   
           this.extractFacets(this.res.facet_counts.facet_fields);
         });
@@ -168,7 +211,7 @@ else {
   for(let key in res) {
     res[key].forEach((item, index) => {
     
-      if(index%2 == 0) {
+      if(index%2 == 0 && item.length >=3) {
         suggestions.push(item);
       }
   }
@@ -231,7 +274,17 @@ return suggestionsSet
   
 
   ngOnInit() {
+    this.facetFieldMap.set('manu_exact', 'Manufacturer');
+    this.facetFieldMap.set('cat', 'Category');
+    this.facetFieldMap.set('genre_s', 'Genre');
     this.getResponse();
+    if (this.windowWidth < 768) {
+      this.showFiltersBool = false;
+    }
   }
 
+  @HostListener('window:resize', ['$event'])
+  resize(event) {
+      this.windowWidth = window.innerWidth;
+  }
 }

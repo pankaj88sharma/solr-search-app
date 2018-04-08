@@ -9,12 +9,12 @@ import { catchError, map, tap } from 'rxjs/operators';
 @Injectable()
 export class SolrSearchService {
 
-  private solrUrl = 'http://ec2-18-216-15-131.us-east-2.compute.amazonaws.com:8983/solr/techproducts/select?&facet.field=cat&facet=on&facet.limit=10&facet.field=genre_s&facet.mincount=1';  // URL to solr api
+  private solrUrl = 'http://localhost:8983/solr/techproducts/select?facet=on&facet.limit=5&facet.mincount=1&facet.field=cat&facet.field=manu_exact&facet.field=genre_s';  // URL to solr api
 
-  private solrSuggestUrl = 'http://ec2-18-216-15-131.us-east-2.compute.amazonaws.com:8983/solr/techproducts/terms?terms.fl=name&terms.fl=genre_s&terms.fl=title&terms.fl=cat&&terms.prefix=';  // URL to solr api
+  private solrSuggestUrl = 'http://localhost:8983/solr/techproducts/terms?terms.fl=name&terms.fl=genre_s&terms.fl=cat&terms.fl=manu_s&terms.prefix=';  // URL to solr api
   constructor(private http: HttpClient) { }
 
-  
+
   
 getResponse (query: string, sortField: any, start: number, fq: string): Observable<any> {
   /* const headers = new HttpHeaders().append('Access-Control-Allow-Headers', 'Content-Type')
@@ -33,7 +33,7 @@ getResponse (query: string, sortField: any, start: number, fq: string): Observab
   return this.http.get<any>(url)
     .pipe(
       tap(heroes => console.log('fetched results from solr')),
-      catchError(this.handleError('getSearchResults', {}))
+      catchError(this.handleError('getSearchResults', {"error" : true}))
     );
 }
 
