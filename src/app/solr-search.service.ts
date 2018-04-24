@@ -9,9 +9,9 @@ import { catchError, map, tap } from 'rxjs/operators';
 @Injectable()
 export class SolrSearchService {
 
-  private solrUrl = 'http://18.218.204.138:8983/solr/techproducts/select?facet=on&facet.limit=5&facet.mincount=1&facet.field=cat&facet.field=manu_exact&facet.field=genre_s';  // URL to solr api
+  private solrUrl = 'http://ec2-18-218-204-138.us-east-2.compute.amazonaws.com:8983/solr/techproducts/select-custom?';  // URL to solr api
 
-  private solrSuggestUrl = 'http://18.218.204.138:8983/solr/techproducts/terms?terms.fl=name&terms.fl=genre_s&terms.fl=cat&terms.fl=manu_s&terms.prefix=';  // URL to solr api
+  private solrSuggestUrl = 'http://ec2-18-218-204-138.us-east-2.compute.amazonaws.com:8983/solr/techproducts/terms?terms.fl=name&terms.fl=genre_s&terms.fl=cat&terms.fl=manu_s&terms.prefix=';  // URL to solr api
   constructor(private http: HttpClient) { }
 
 
@@ -20,7 +20,12 @@ getResponse (query: string, sortField: any, start: number, fq: string): Observab
   /* const headers = new HttpHeaders().append('Access-Control-Allow-Headers', 'Content-Type')
   .append('Access-Control-Allow-Methods', 'GET')
   .append('Access-Control-Allow-Origin', '*');  */
-  let url = `${this.solrUrl}&q=${query}`;
+
+  let q = query;
+  if(query == null) {
+    q='*:*';
+  }
+  let url = `${this.solrUrl}&q=${q}`;
   if(sortField.id != 0) { 
     url = `${url}&sort=${sortField.sortQuery}`;
   }

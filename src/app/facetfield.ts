@@ -1,19 +1,21 @@
 export class FacetField {
     field: string;
-    facetDetails: FacetDetail[];
+    type: string;
+    facetFieldDetails: FacetFieldDetail[];
 
-    constructor(field: string, facetDetails: FacetDetail[]){
+    constructor(field: string, facetFieldDetails: FacetFieldDetail[]){
       this.field = field;
-      this.facetDetails = facetDetails;
+      this.type = 'FACET';
+      this.facetFieldDetails = facetFieldDetails;
     }
   }
   
-  export class FacetDetail {
-    value: string;
+  export class FacetFieldDetail {
+    value: any;
     count: number;
     checked: boolean;
 
-    constructor(value: string, count: number, checked: boolean){
+    constructor(value: any, count: number, checked: boolean){
       this.value = value;
       this.count = count;
       this.checked = checked;

@@ -1,9 +1,13 @@
-import { Component, OnInit, HostListener, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 import { SolrSearchService } from '../solr-search.service';
 import { Observable } from 'rxjs/Observable';
-import { FacetField, FacetDetail } from '../facetfield';
-import { SortField, SORT_FIELDS} from '../sort';
+
+import { FacetField, FacetFieldDetail } from '../facetfield';
+import { FacetRange, FacetRangeDetail } from '../facetrange';
+import { FilterQuery } from '../filterquery';
+import { SortField, SORT_FIELDS } from '../sort';
+
 
 @Component({
   selector: 'app-search',
@@ -14,23 +18,20 @@ export class SearchComponent implements OnInit {
 
   res: any;
   resSuggest: any;
-  filterQuery: string = '';
+  filterQueryStr: string = '';
 
   facetFieldMap: Map<string, string> = new Map();
 
+  numResults: number;
 
-
-  windowWidth: number = window.innerWidth;
-
-  numResults : number;
-
-  showFiltersBool: boolean = true;
+  showFiltersBool: boolean = false;
 
   extractFacetsRequired: boolean = true;
 
-  fqMap: Map<string, any[]> = new Map();
+  fqMap: Map<string, FilterQuery> = new Map();
 
   facetFields: FacetField[] = [];
+  facetRanges: FacetRange[] = [];
 
   suggestions: string[] = [];
 
@@ -39,26 +40,30 @@ export class SearchComponent implements OnInit {
   firstRec: number = 1;
   lastRec: number = 10;
 
-  searchQuery: string = "*:*";
+  searchQuery: string;
 
   start: number = 0;
 
   sortFields = SORT_FIELDS;
   selectedSortField = this.sortFields[0];
- 
+
+  selectedFacets = [];
+
   constructor(private solrSearchService: SolrSearchService) { }
 
-  onSortFieldChange(selectedSortField : SortField) {
-   // console.log(this.selectedSortField);
+  onSortFieldChange(selectedSortField: SortField) {
+    // console.log(this.selectedSortField);
     this.extractFacetsRequired = false;
     this.selectedSortField = selectedSortField;
     this.selectedSortField.isSelected = true;
+    this.start = 0;
+    this.pageNo = 1;
     this.sortFields.forEach((item, index) => {
-    if (index !== this.selectedSortField.id){
+      if (index !== this.selectedSortField.id) {
         item.isSelected = false;
+      }
     }
-  }
-  );
+    );
     this.getResponse();
   }
 
@@ -66,7 +71,7 @@ export class SearchComponent implements OnInit {
     this.showFiltersBool = !this.showFiltersBool;
   }
 
-  showNextPageResults(){
+  showNextPageResults() {
     this.extractFacetsRequired = false;
     let num = this.start;
     this.start = num + 10;
@@ -93,198 +98,272 @@ export class SearchComponent implements OnInit {
   }
 
   selectedSuggestTerm(str: string, e: any) {
-    e.value=str;
+    e.value = str;
     this.suggestions = [];
     this.searchQuery = str;
     this.facetFields = [];
+    this.facetRanges = [];
+    this.start = 0;
+    this.pageNo = 1;
     this.getResponse();
   }
 
-  onFacetSelection(mode: boolean, field: string, value: string, event: any){
-    //console.log(mode, field, value);
-    this.generateFilterQueryMap(mode,field,value);
+  onFacetSelection(mode: boolean, type: string, field: string, facetDetail: any) {
+   // console.log(mode, type, field, facetDetail);
+    this.generateFilterQueryMap(mode, field, type, facetDetail);
     this.extractFacetsRequired = true;
     this.facetFields = []
+    this.facetRanges = [];
+    this.start = 0;
+    this.pageNo = 1;
+    this.selectedFacets = []
     this.getResponse();
-    event.target.checked = mode;
-    console.log(event.target.checked);
   }
 
-  generateFilterQueryMap(mode: boolean, field: string, value: string) {
-    let valueArr = [];
+  generateFilterQueryMap(mode: boolean, field: string, type: string, facetDetail: any) {
+    let filterQuery = new FilterQuery(field, type, []);
+   
     if (mode == true) {
-    if(!this.fqMap.has(field)) {
-      valueArr.push(value);
+      if (!this.fqMap.has(field))
+        filterQuery.values.push(facetDetail.value);
+      else {
+        filterQuery = this.fqMap.get(field);
+        filterQuery.values.push(facetDetail.value);
+      }
+      this.fqMap.set(field, filterQuery);
     }
-    else{
-      valueArr = this.fqMap.get(field);
-      valueArr.push(value);
-    }
-    this.fqMap.set(field,valueArr);
-  }
 
-  else{
-    valueArr = this.fqMap.get(field);
-    valueArr = valueArr.filter(obj => obj !== value);
-    if(valueArr.length == 0) {
+    else {
+      filterQuery = this.fqMap.get(field);
+      filterQuery.values = filterQuery.values.filter(obj => obj !== facetDetail.value);
+      if (filterQuery.values.length == 0) {
         this.fqMap.delete(field);
+      }
+      else { this.fqMap.set(field, filterQuery); }
+
     }
-    else { this.fqMap.set(field,valueArr);}
-  
-  }
-    //console.log(this.fqMap);
+   // console.log(this.fqMap);
     this.generateFilterQueryString(this.fqMap);
   }
 
   generateFilterQueryString(fqMap: any) {
+    // console.log(type);
     let fq: string[] = [];
-    fqMap.forEach((value: string[], key: string) => {
+    fqMap.forEach((value: FilterQuery, key: string) => {
+      let valueStr = '';
+      let rangeArr = [];
+      if (value.type === 'RANGE') {
+        valueStr = value.values.map(obj => `[${obj} TO ${obj + 100}]`).join(` OR `)
+        valueStr = `${key}:${valueStr}`;
+      }
       //console.log(key, value);
-      let valueStr = value.join(`" OR "`)
-      valueStr = `${key}:"${valueStr}"`;
+      else {
+        valueStr = value.values.join(`" OR "`)
+        valueStr = `${key}:"${valueStr}"`;
+      }
+
       //console.log(valueStr)
       fq.push(valueStr)
-  });
-  //console.log(fq)
-  this.filterQuery = fq.join('&fq=')
-  this.filterQuery = `fq=${this.filterQuery}`
-  console.log(this.filterQuery)
+    });
+    //console.log(fq)
+    this.filterQueryStr = fq.join('&fq=')
+    this.filterQueryStr = `fq=${this.filterQueryStr}`
+   // console.log(this.filterQueryStr)
   }
 
   onSearchButtonClick(query: string) {
-    if(query.length > 0) {
-    this.executeSearch(query);
+    if (query.length > 0) {
+      this.executeSearch(query);
     }
   }
 
   onBlurMethod() {
-   // console.log("blur");
+    // console.log("blur");
     this.suggestions = [];
   }
 
-getSuggestionsOrExecuteSearch(query: string, event: any) {
-//console.log(query, event);
-if(event.code == 'Enter'){
-  this.executeSearch(query);
-  event.target.blur();
-}
-else {
-  this.getSuggestions(query);
-}
-}
+  getSuggestionsOrExecuteSearch(query: string, event: any) {
+    //console.log(query, event);
+    if (event.code == 'Enter') {
+      this.executeSearch(query);
+      event.target.blur();
+    }
+    else {
+      this.getSuggestions(query);
+    }
+  }
 
   executeSearch(query: string) {
     this.searchQuery = query;
     this.facetFields = [];
+    this.facetRanges = [];
+    this.extractFacetsRequired = true;
     this.suggestions = [];
+    this.start = 0;
+    this.pageNo = 1;
     this.getResponse();
   }
 
   getSuggestions(query: string) {
-    if(query.length < 1) {
+    if (query.length < 1) {
       this.suggestions = [];
       return;
     }
     this.solrSearchService.getAutoCompleteSuggestions(query)
-    .subscribe(res => {
-      this.resSuggest = res.terms;
-     // console.log(this.resSuggest); 
-      this.suggestions = this.extractSuggestions(this.resSuggest);
-      //console.log(this.suggestions);
-    });
+      .subscribe(res => {
+        this.resSuggest = res.terms;
+        // console.log(this.resSuggest); 
+        this.suggestions = this.extractSuggestions(this.resSuggest);
+        //console.log(this.suggestions);
+      });
   }
 
   getResponse(): void {
-    this.solrSearchService.getResponse(this.searchQuery, this.selectedSortField, this.start, this.filterQuery)
-        .subscribe(res => {
-          this.res = res;
-          console.log(this.res);
-          this.totalPages = Math.ceil(this.res.response.numFound/10); 
-          this.numResults = this.res.response.numFound;
-          if(this.extractFacetsRequired)   
-          this.extractFacets(this.res.facet_counts.facet_fields);
-        });
+    this.solrSearchService.getResponse(this.searchQuery, this.selectedSortField, this.start, this.filterQueryStr)
+      .subscribe(res => {
+        this.res = res;
+        console.log(this.res);
+        this.totalPages = Math.ceil(this.res.response.numFound / 10);
+        this.numResults = this.res.response.numFound;
+        if (this.extractFacetsRequired) {
+          this.extractFieldFacets(this.res.facet_counts.facet_fields);
+          this.extractRangeFacets(this.res.facet_counts.facet_ranges);
+        }
+      });
   }
 
-  extractSuggestions(res: any) : string[] {
+  extractSuggestions(res: any): string[] {
     let suggestions: string[] = []
-  for(let key in res) {
-    res[key].forEach((item, index) => {
-    
-      if(index%2 == 0 && item.length >=3) {
-        suggestions.push(item);
+    for (let key in res) {
+      res[key].forEach((item, index) => {
+
+        if (index % 2 == 0 && item.length >= 3) {
+          suggestions.push(item);
+        }
       }
-  }
-  );
-}
-let suggestionsSet = Array.from(new Set(suggestions));
-return suggestionsSet
+      );
+    }
+    let suggestionsSet = Array.from(new Set(suggestions));
+    return suggestionsSet
 
   }
 
-  extractFacets(res: any) {
-  // console.log(res);
-    for(let key in res) {
+  onClearAll() {
+    this.facetFields = [];
+    this.facetRanges = [];
+    this.selectedFacets = [];
+    this.extractFacetsRequired = true;
+    this.fqMap.clear();
+    this.filterQueryStr = '';
+    this.showFiltersBool = false;
+    this.getResponse();
+  }
+
+  extractRangeFacets(res: any) {
+    // console.log(res);
+    for (let key in res) {
       //console.log(key);
       //console.log(res[key])
-      let facetDetails = this.getFacetDetails(key, res[key]);
+      let facetDetails = this.getRangeFacetDetails(key, res[key].counts, res[key].gap);
+      //console.log(facetDetails)
+      let facetRange: FacetRange = new FacetRange(key, facetDetails);
+      //console.log(facetField)
+      this.facetRanges.push(facetRange)
+    }
+    // console.log(this.facetRanges)
+  }
+
+  getRangeFacetDetails(key: string, values: string[], gap: number): FacetRangeDetail[] {
+
+    let value: number
+    let count: number
+    let checked: boolean = false
+    let queryVal: string
+    let facetRange: FacetRange
+    let facetDetails: FacetRangeDetail[] = [];
+    let facetDetail: FacetRangeDetail;
+    values.forEach((item, index) => {
+
+      if (index % 2 == 0) {
+        // console.log("value: " + item);
+        value = +item;
+        queryVal = `[${value} TO ${value + gap}]`
+        checked = this.setCheckedValue(key, +item);
+        if (checked)
+          this.selectedFacets.push({ field: key, type: "RANGE",value: value, queryVal: `${value}-${value + 100}` });
+      }
+      else {
+        //console.log("count: " + item);
+        count = +item;
+        facetDetail = new FacetRangeDetail(value, count, checked, queryVal);
+        facetDetails.push(facetDetail);
+      }
+    }
+    );
+    return facetDetails;
+  }
+
+  extractFieldFacets(res: any) {
+    // console.log(res);
+    for (let key in res) {
+      //console.log(key);
+      //console.log(res[key])
+      let facetDetails = this.getFieldFacetDetails(key, res[key]);
       //console.log(facetDetails)
       let facetField: FacetField = new FacetField(key, facetDetails);
       //console.log(facetField)
       this.facetFields.push(facetField)
     }
-   // console.log(this.facetFields)
+    //console.log(this.facetFields)
   }
 
-  getFacetDetails(key:string, values: string[]) : FacetDetail[] {
+  getFieldFacetDetails(key: string, values: string[]): FacetFieldDetail[] {
 
-  let value: string
-   let count: number
-   let checked: boolean = false;
-   let facetField : FacetField
-   let facetDetails : FacetDetail[] = [];
-   let facetDetail: FacetDetail;
+    let value: string
+    let count: number
+    let checked: boolean = false;
+    let facetField: FacetField
+    let facetDetails: FacetFieldDetail[] = [];
+    let facetDetail: FacetFieldDetail;
     values.forEach((item, index) => {
-    
-      if(index%2 == 0) {
-       // console.log("value: " + item);
+
+      if (index % 2 == 0) {
+        // console.log("value: " + item);
         value = item;
         checked = this.setCheckedValue(key, value);
+        if (checked)
+        this.selectedFacets.push({ field: key, type: "RANGE",value: value, queryVal: value });
       }
       else {
-       //console.log("count: " + item);
+        //console.log("count: " + item);
         count = +item;
-        facetDetail = new FacetDetail(value, count, checked);
+        facetDetail = new FacetFieldDetail(value, count, checked);
         facetDetails.push(facetDetail);
       }
-  }
-  );
+    }
+    );
     return facetDetails;
   }
 
-  setCheckedValue(key: string, value: string) : boolean{
-     // console.log("inside setCheckedValue");
-      if(this.fqMap.has(key)) {
-         // console.log(key, "key in fq");
-         // console.log(this.fqMap.get(key).includes(value))
-          return this.fqMap.get(key).includes(value)
-      }
-      return false;
+  setCheckedValue(key: string, value: any): boolean {
+    // console.log("inside setCheckedValue");
+    if (this.fqMap.has(key)) {
+      return this.fqMap.get(key).values.includes(value)
+    }
+    return false;
   }
-  
+
+  getHighlightedFeatures(id: string): any[] {
+   // console.log(this.res.highlighting[id].features)
+      return this.res.highlighting[id].features
+  }
+
 
   ngOnInit() {
     this.facetFieldMap.set('manu_exact', 'Manufacturer');
     this.facetFieldMap.set('cat', 'Category');
     this.facetFieldMap.set('genre_s', 'Genre');
+    this.facetFieldMap.set('price', 'Price');
     this.getResponse();
-    if (this.windowWidth < 768) {
-      this.showFiltersBool = false;
-    }
-  }
-
-  @HostListener('window:resize', ['$event'])
-  resize(event) {
-      this.windowWidth = window.innerWidth;
   }
 }
