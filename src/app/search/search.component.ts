@@ -49,6 +49,8 @@ export class SearchComponent implements OnInit {
 
   selectedFacets = [];
 
+  showSpinner: boolean = false;
+
   constructor(private solrSearchService: SolrSearchService) { }
 
   onSortFieldChange(selectedSortField: SortField) {
@@ -103,6 +105,9 @@ export class SearchComponent implements OnInit {
     this.searchQuery = str;
     this.facetFields = [];
     this.facetRanges = [];
+    this.fqMap.clear();
+    this.filterQueryStr = '';
+    this.selectedFacets = [];
     this.start = 0;
     this.pageNo = 1;
     this.getResponse();
@@ -173,6 +178,9 @@ export class SearchComponent implements OnInit {
 
   onSearchButtonClick(query: string) {
     if (query.length > 0) {
+      this.fqMap.clear();
+      this.filterQueryStr = '';
+      this.selectedFacets = [];
       this.executeSearch(query);
     }
   }
@@ -185,6 +193,9 @@ export class SearchComponent implements OnInit {
   getSuggestionsOrExecuteSearch(query: string, event: any) {
     //console.log(query, event);
     if (event.code == 'Enter') {
+      this.fqMap.clear();
+      this.filterQueryStr = '';
+      this.selectedFacets = [];
       this.executeSearch(query);
       event.target.blur();
     }
@@ -198,6 +209,7 @@ export class SearchComponent implements OnInit {
     this.facetFields = [];
     this.facetRanges = [];
     this.extractFacetsRequired = true;
+    this.selectedFacets = [];
     this.suggestions = [];
     this.start = 0;
     this.pageNo = 1;
@@ -219,6 +231,7 @@ export class SearchComponent implements OnInit {
   }
 
   getResponse(): void {
+    this.showSpinner = true;
     this.solrSearchService.getResponse(this.searchQuery, this.selectedSortField, this.start, this.filterQueryStr)
       .subscribe(res => {
         this.res = res;
@@ -229,6 +242,7 @@ export class SearchComponent implements OnInit {
           this.extractFieldFacets(this.res.facet_counts.facet_fields);
           this.extractRangeFacets(this.res.facet_counts.facet_ranges);
         }
+        this.showSpinner = false;
       });
   }
 

@@ -35,6 +35,7 @@ getResponse (query: string, sortField: any, start: number, fq: string): Observab
   }
   url = `${url}&${fq}`;
   console.log(url);
+
   return this.http.get<any>(url)
     .pipe(
       tap(heroes => console.log('fetched results from solr')),

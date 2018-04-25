@@ -1,6 +1,14 @@
-<div class="container-fluid">
+<div class="container-fluid h-100">
 
-  <div class="row" *ngIf="res">
+    <div class="row h-75" *ngIf="showSpinner">
+        <div class="col-12 my-auto">
+          <div class="text-center">
+        <img class="img-fluid" width="50px" height="50px" src="/assets/spinner.svg">
+      </div>
+        </div>
+    </div>
+
+  <div class="row" *ngIf="!showSpinner && res">
 
     <div class="col-md-3 col-xl-2 text-dark border-right">
       <div class="row">
