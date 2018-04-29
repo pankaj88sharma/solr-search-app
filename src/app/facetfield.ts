@@ -20,8 +20,4 @@ export class FacetField {
       this.count = count;
       this.checked = checked;
     }
-
-    setChecked(checked: boolean) {
-      this.checked = checked;
-    }
   }

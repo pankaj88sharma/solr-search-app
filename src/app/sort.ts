@@ -7,6 +7,6 @@ isSelected: boolean;
 
 export const SORT_FIELDS: SortField[] = [
     { id: 0, value: 'Relevance', sortQuery: 'score desc', isSelected: true },
-    { id: 1, value: 'Price: Low to High', sortQuery: 'price asc', isSelected: false },
-    { id: 2, value: 'Price: High to Low', sortQuery: 'price desc', isSelected: false }
+    { id: 1, value: 'Price: Low to High', sortQuery: 'price_f asc', isSelected: false },
+    { id: 2, value: 'Price: High to Low', sortQuery: 'price_f desc', isSelected: false }
   ];

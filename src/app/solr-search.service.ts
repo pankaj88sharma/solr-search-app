@@ -9,9 +9,9 @@ import { catchError, map, tap } from 'rxjs/operators';
 @Injectable()
 export class SolrSearchService {
 
-  private solrUrl = 'http://ec2-18-218-204-138.us-east-2.compute.amazonaws.com:8983/solr/techproducts/select-custom?';  // URL to solr api
+  private solrUrl = 'http://ec2-18-218-204-138.us-east-2.compute.amazonaws.com:8983/solr/mobiles/select-custom?';  // URL to solr api
 
-  private solrSuggestUrl = 'http://ec2-18-218-204-138.us-east-2.compute.amazonaws.com:8983/solr/techproducts/terms?terms.fl=name&terms.fl=genre_s&terms.fl=cat&terms.fl=manu_s&terms.prefix=';  // URL to solr api
+  private solrSuggestUrl = 'http://ec2-18-218-204-138.us-east-2.compute.amazonaws.com:8983/solr/mobiles/auto-suggest?q=';  // URL to solr api
   constructor(private http: HttpClient) { }
 
 
@@ -34,7 +34,7 @@ getResponse (query: string, sortField: any, start: number, fq: string): Observab
     url = `${url}&start=${start}`;
   }
   url = `${url}&${fq}`;
-  console.log(url);
+  //console.log(url);
 
   return this.http.get<any>(url)
     .pipe(
@@ -46,6 +46,7 @@ getResponse (query: string, sortField: any, start: number, fq: string): Observab
 
 getAutoCompleteSuggestions (term: string): Observable<any> {
   let url = `${this.solrSuggestUrl}${term}`;
+  //console.log(url);
   return this.http.get<any>(url)
     .pipe(
       tap(heroes => console.log('fetched suggestions from solr')),

@@ -15,11 +15,14 @@ export class FacetRange {
     count: number;
     checked: boolean;
     queryVal: string;
+    dispVal: string;
 
-    constructor(value: any, count: number, checked: boolean, queryVal: string){ 
+
+    constructor(value: any, count: number, checked: boolean, queryVal: string, dispVal: string){ 
       this.value = value;
       this.count = count;
       this.checked = checked;
       this.queryVal = queryVal;
+      this.dispVal = dispVal;
     }
   }

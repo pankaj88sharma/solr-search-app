@@ -8,11 +8,48 @@ import { FacetRange, FacetRangeDetail } from '../facetrange';
 import { FilterQuery } from '../filterquery';
 import { SortField, SORT_FIELDS } from '../sort';
 
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition
+} from '@angular/animations';
 
 @Component({
   selector: 'app-search',
   templateUrl: './search.component.html',
-  styleUrls: ['./search.component.css']
+  styleUrls: ['./search.component.css'],
+  animations: [
+    trigger('filtersState', [
+      transition('void => *', [
+        style({
+          opacity: 0,
+          transform: 'translateX(-100%)'
+        }),
+        animate('400ms ease-in-out')
+      ]),
+      transition('* => void', [
+        animate('400ms ease-in-out', style({
+          opacity: 0,
+          transform: 'translateX(-100%)'
+        }))
+      ])
+    ]),
+    trigger('suggestionsState', [
+      transition('void => *', [
+        style({
+          opacity: 0
+        }),
+        animate('400ms ease-in-out')
+      ]),
+      transition('* => void', [
+        animate('400ms ease-in-out', style({
+          opacity: 0
+        }))
+      ])
+    ])
+  ]
 })
 export class SearchComponent implements OnInit {
 
@@ -25,6 +62,8 @@ export class SearchComponent implements OnInit {
   numResults: number;
 
   showFiltersBool: boolean = false;
+  filtersState = 'hide';
+  suggestionsState = 'hide'
 
   extractFacetsRequired: boolean = true;
 
@@ -33,7 +72,7 @@ export class SearchComponent implements OnInit {
   facetFields: FacetField[] = [];
   facetRanges: FacetRange[] = [];
 
-  suggestions: string[] = [];
+  suggestions = [];
 
   pageNo: number = 1;
   totalPages: number;
@@ -70,7 +109,10 @@ export class SearchComponent implements OnInit {
   }
 
   hideFilters() {
+    //console.log(this.filtersState);
     this.showFiltersBool = !this.showFiltersBool;
+    this.filtersState = this.filtersState === 'show' ? 'hide' : 'show';
+    //console.log(this.filtersState);
   }
 
   showNextPageResults() {
@@ -126,7 +168,7 @@ export class SearchComponent implements OnInit {
   }
 
   generateFilterQueryMap(mode: boolean, field: string, type: string, facetDetail: any) {
-    let filterQuery = new FilterQuery(field, type, []);
+    let filterQuery = new FilterQuery(field, type, [], facetDetail);
    
     if (mode == true) {
       if (!this.fqMap.has(field))
@@ -158,7 +200,8 @@ export class SearchComponent implements OnInit {
       let valueStr = '';
       let rangeArr = [];
       if (value.type === 'RANGE') {
-        valueStr = value.values.map(obj => `[${obj} TO ${obj + 100}]`).join(` OR `)
+       // console.log(value.fqDetail.queryVal);
+        valueStr = value.fqDetail.queryVal
         valueStr = `${key}:${valueStr}`;
       }
       //console.log(key, value);
@@ -223,9 +266,9 @@ export class SearchComponent implements OnInit {
     }
     this.solrSearchService.getAutoCompleteSuggestions(query)
       .subscribe(res => {
-        this.resSuggest = res.terms;
+        this.resSuggest = res;
         // console.log(this.resSuggest); 
-        this.suggestions = this.extractSuggestions(this.resSuggest);
+        this.extractSuggestions(this.resSuggest);
         //console.log(this.suggestions);
       });
   }
@@ -235,7 +278,7 @@ export class SearchComponent implements OnInit {
     this.solrSearchService.getResponse(this.searchQuery, this.selectedSortField, this.start, this.filterQueryStr)
       .subscribe(res => {
         this.res = res;
-        console.log(this.res);
+       // console.log(this.res);
         this.totalPages = Math.ceil(this.res.response.numFound / 10);
         this.numResults = this.res.response.numFound;
         if (this.extractFacetsRequired) {
@@ -246,20 +289,24 @@ export class SearchComponent implements OnInit {
       });
   }
 
-  extractSuggestions(res: any): string[] {
-    let suggestions: string[] = []
-    for (let key in res) {
-      res[key].forEach((item, index) => {
+  extractSuggestions(res: any) {
+    this.suggestions = [];
+    //console.log(res)
+    res.response.docs.forEach(element => {
+     // console.log(res.highlighting[element.id].name_tn[0]);
+      this.suggestions.push({dispVal: res.highlighting[element.id].name_tn[0], queryVal: element.name_s});
+    });
 
-        if (index % 2 == 0 && item.length >= 3) {
-          suggestions.push(item);
-        }
-      }
-      );
-    }
-    let suggestionsSet = Array.from(new Set(suggestions));
-    return suggestionsSet
+    if(res.spellcheck && res.spellcheck.collations && res.spellcheck.collations.length > 0)
+      this.suggestions.push({dispVal: res.spellcheck.collations[1].collationQuery});
+    // console.log(this.suggestionsState);
 
+      if(this.suggestions.length > 0) 
+          this.suggestionsState = 'show';
+      else
+      this.suggestionsState = 'hide';
+
+     // console.log(this.suggestionsState);
   }
 
   onClearAll() {
@@ -270,6 +317,7 @@ export class SearchComponent implements OnInit {
     this.fqMap.clear();
     this.filterQueryStr = '';
     this.showFiltersBool = false;
+    this.filtersState = 'hide';
     this.getResponse();
   }
 
@@ -278,7 +326,7 @@ export class SearchComponent implements OnInit {
     for (let key in res) {
       //console.log(key);
       //console.log(res[key])
-      let facetDetails = this.getRangeFacetDetails(key, res[key].counts, res[key].gap);
+      let facetDetails = this.getRangeFacetDetails(key, res[key]);
       //console.log(facetDetails)
       let facetRange: FacetRange = new FacetRange(key, facetDetails);
       //console.log(facetField)
@@ -287,7 +335,7 @@ export class SearchComponent implements OnInit {
     // console.log(this.facetRanges)
   }
 
-  getRangeFacetDetails(key: string, values: string[], gap: number): FacetRangeDetail[] {
+  getRangeFacetDetails(key: string, res: any): FacetRangeDetail[] {
 
     let value: number
     let count: number
@@ -296,24 +344,38 @@ export class SearchComponent implements OnInit {
     let facetRange: FacetRange
     let facetDetails: FacetRangeDetail[] = [];
     let facetDetail: FacetRangeDetail;
-    values.forEach((item, index) => {
+
+    checked = this.setCheckedValue(key, 'before');
+    if (checked)
+      this.selectedFacets.push({ field: key, type: "RANGE",value: 'before', dispVal: `Under ${res.start}` });
+    facetDetail = new FacetRangeDetail('before', res.before, checked, `[* TO ${res.start}]`, `Under ${res.start}`);
+    facetDetails.push(facetDetail);
+
+    res.counts.forEach((item, index) => {
 
       if (index % 2 == 0) {
         // console.log("value: " + item);
         value = +item;
-        queryVal = `[${value} TO ${value + gap}]`
+        queryVal = `[${value} TO ${value + res.gap}]`
         checked = this.setCheckedValue(key, +item);
         if (checked)
-          this.selectedFacets.push({ field: key, type: "RANGE",value: value, queryVal: `${value}-${value + 100}` });
+          this.selectedFacets.push({ field: key, type: "RANGE",value: value, dispVal: `${value}-${value + res.gap}` });
       }
       else {
         //console.log("count: " + item);
         count = +item;
-        facetDetail = new FacetRangeDetail(value, count, checked, queryVal);
+        facetDetail = new FacetRangeDetail(value, count, checked, queryVal, `${value} - ${value + res.gap}`);
         facetDetails.push(facetDetail);
       }
     }
     );
+
+    checked = this.setCheckedValue(key, 'after');
+    if (checked)
+      this.selectedFacets.push({ field: key, type: "RANGE",value: 'after', dispVal: `Over ${res.end}` });
+    facetDetail = new FacetRangeDetail('after', res.after, checked, `[${res.end} TO *]`, `Over ${res.end}`);
+    facetDetails.push(facetDetail);
+
     return facetDetails;
   }
 
@@ -346,7 +408,7 @@ export class SearchComponent implements OnInit {
         value = item;
         checked = this.setCheckedValue(key, value);
         if (checked)
-        this.selectedFacets.push({ field: key, type: "RANGE",value: value, queryVal: value });
+        this.selectedFacets.push({ field: key, type: "FACET",value: value, dispVal: value });
       }
       else {
         //console.log("count: " + item);
@@ -360,8 +422,12 @@ export class SearchComponent implements OnInit {
   }
 
   setCheckedValue(key: string, value: any): boolean {
-    // console.log("inside setCheckedValue");
+    //console.log("inside setCheckedValue");
+   // console.log(this.fqMap.has(key))
     if (this.fqMap.has(key)) {
+     // console.log(this.fqMap.get(key).values)
+    //  console.log(value)
+     // console.log(this.fqMap.get(key).values.includes(value))
       return this.fqMap.get(key).values.includes(value)
     }
     return false;
@@ -372,12 +438,15 @@ export class SearchComponent implements OnInit {
       return this.res.highlighting[id].features
   }
 
+  purchase(url: string) {
+    window.open(url,'_blank');
+  }
+
 
   ngOnInit() {
-    this.facetFieldMap.set('manu_exact', 'Manufacturer');
-    this.facetFieldMap.set('cat', 'Category');
-    this.facetFieldMap.set('genre_s', 'Genre');
-    this.facetFieldMap.set('price', 'Price');
+    this.facetFieldMap.set('brand_s', 'Brand');
+    this.facetFieldMap.set('os_s', 'Operating System');
+    this.facetFieldMap.set('price_f', 'Price');
     this.getResponse();
   }
 }

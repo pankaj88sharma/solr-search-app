@@ -1,7 +1,9 @@
 .suggestions-result {
     position: absolute;
     z-index:1;
+    font-size: 14px;
   }
+
 
 .res-grid {
   overflow-wrap:break-word;
@@ -21,6 +23,7 @@
 
 .filter-item:hover {
   cursor: pointer;
+  font-weight: bolder;
 }
 
 .selected-filters {
