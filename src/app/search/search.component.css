@@ -1,9 +1,10 @@
 .suggestions-result {
     position: absolute;
-    z-index:1;
-    font-size: 14px;
+    z-index:100;
   }
-
+.sort-div:hover {
+  cursor: pointer;
+}
 
 .res-grid {
   overflow-wrap:break-word;

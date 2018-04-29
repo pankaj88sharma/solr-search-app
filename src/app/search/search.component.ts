@@ -27,10 +27,25 @@ import {
           opacity: 0,
           transform: 'translateX(-100%)'
         }),
-        animate('400ms ease-in-out')
+        animate('200ms ease-in-out')
       ]),
       transition('* => void', [
-        animate('400ms ease-in-out', style({
+        animate('200ms ease-in-out', style({
+          opacity: 0,
+          transform: 'translateX(100%)'
+        }))
+      ])
+    ]),
+    trigger('sortState', [
+      transition('void => *', [
+        style({
+          opacity: 0,
+          transform: 'translateX(100%)'
+        }),
+        animate('200ms ease-in-out')
+      ]),
+      transition('* => void', [
+        animate('200ms ease-in-out', style({
           opacity: 0,
           transform: 'translateX(-100%)'
         }))
@@ -41,12 +56,10 @@ import {
         style({
           opacity: 0
         }),
-        animate('400ms ease-in-out')
+        animate(300, style({ opacity: 1 }))
       ]),
       transition('* => void', [
-        animate('400ms ease-in-out', style({
-          opacity: 0
-        }))
+        animate(300, style({ opacity: 0 }))
       ])
     ])
   ]
@@ -62,8 +75,10 @@ export class SearchComponent implements OnInit {
   numResults: number;
 
   showFiltersBool: boolean = false;
+  showSortDiv: boolean = false;
   filtersState = 'hide';
   suggestionsState = 'hide'
+  sortState = 'hide'
 
   extractFacetsRequired: boolean = true;
 
@@ -112,6 +127,13 @@ export class SearchComponent implements OnInit {
     //console.log(this.filtersState);
     this.showFiltersBool = !this.showFiltersBool;
     this.filtersState = this.filtersState === 'show' ? 'hide' : 'show';
+    //console.log(this.filtersState);
+  }
+
+  toggleSortState() {
+    //console.log(this.filtersState);
+    this.showSortDiv = !this.showSortDiv;
+    this.sortState = this.sortState === 'show' ? 'hide' : 'show';
     //console.log(this.filtersState);
   }
 
