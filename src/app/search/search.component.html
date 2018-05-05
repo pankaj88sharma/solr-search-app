@@ -139,8 +139,10 @@
                     <label class="mr-3 mt-2 border rounded pl-1 pr-1 selected-filters" *ngFor="let facet of selectedFacets" (click)="onFacetSelection(false, facet.type, facet.field, facet)">{{facet.dispVal}}</label>
                   </div>
                   </div>
+               <div class="row">  
+                 <div class="col-12 mt-1">
             <ul class="list-unstyled">
-              <li class="mb-4 p-1 border-bottom" *ngFor="let facetField of facetFields">
+              <li class="mb-4 border-bottom" *ngFor="let facetField of facetFields">
                 <h5>{{facetFieldMap.get(facetField.field)}}</h5>
                 <ul *ngIf="facetField.facetFieldDetails.length > 0" class="list-unstyled ml-4">
   
@@ -162,7 +164,11 @@
                 </ul>
               </li>
             </ul>
-            <ul class="list-unstyled mt-2">
+            </div>
+            </div>
+            <div class="row"> 
+              <div class="col-12">
+            <ul class="list-unstyled mt-1">
               <li class="mb-4 p-1 border-bottom" *ngFor="let facetRange of facetRanges">
                 <h5>{{facetFieldMap.get(facetRange.field)}}</h5>
                 <ul *ngIf="facetRange.facetRangeDetails.length > 0" class="list-unstyled ml-4">
@@ -185,7 +191,9 @@
                 </ul>
               </li>
             </ul>
+          </div> 
           </div>
+        </div>
         </div>
 
 

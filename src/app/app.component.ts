@@ -9,6 +9,6 @@ import { Component } from '@angular/core';
 export class AppComponent {
 
   goToHomePage(){
-    window.location.href = window.location.href
+    window.location.reload();
   }
 }
