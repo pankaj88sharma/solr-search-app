@@ -28,8 +28,7 @@ const routes: Routes = [
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    FormsModule,
-    RouterModule.forRoot(routes)
+    FormsModule
   ],
   providers: [SolrSearchService, HttpClientModule],
   bootstrap: [AppComponent]
