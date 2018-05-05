@@ -56,10 +56,10 @@ import {
         style({
           opacity: 0
         }),
-        animate(300, style({ opacity: 1 }))
+        animate(200, style({ opacity: 1 }))
       ]),
       transition('* => void', [
-        animate(300, style({ opacity: 0 }))
+        animate(200, style({ opacity: 0 }))
       ])
     ])
   ]
@@ -320,7 +320,7 @@ export class SearchComponent implements OnInit {
     });
 
     if(res.spellcheck && res.spellcheck.collations && res.spellcheck.collations.length > 0)
-      this.suggestions.push({dispVal: res.spellcheck.collations[1].collationQuery});
+      this.suggestions.push({dispVal: res.spellcheck.collations[1].collationQuery, queryVal: res.spellcheck.collations[1].collationQuery});
     // console.log(this.suggestionsState);
 
       if(this.suggestions.length > 0) 

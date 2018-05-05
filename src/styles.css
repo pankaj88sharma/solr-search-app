@@ -2,5 +2,10 @@
 @import '~font-awesome/css/font-awesome.css';
 
 body,html {
+  padding-top: 25px;
     height: 100%;
+  }
+
+  .home:hover{
+    cursor: pointer;
   }
