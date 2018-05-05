@@ -15,15 +15,14 @@
         <div class="col-md-6 mt-3 d-none d-md-block pr-0">
           <h5 class="text-secondary">Filter by</h5>
         </div>
-        <div class="col-6 mt-3 text-md-right" *ngIf="selectedFacets.length > 0">
+        <div class="col-6 mt-3 text-md-right d-none d-md-block" *ngIf="selectedFacets.length > 0">
           <button title="Clear All" class="btn btn-outline-secondary" (click)=onClearAll()>
               <i class="fa fa-remove d-none d-md-block"></i>
-              <h6 class="d-md-none m-0">CLEAR ALL</h6>
           </button>
         </div>
       </div>
 
-      <div class="row" *ngIf="selectedFacets.length > 0">
+      <div class="row d-none d-md-block" *ngIf="selectedFacets.length > 0">
         <div class="col-md-12 mt-3 mt-md-1">
           <label class="mr-1 border rounded pl-1 pr-1 bg-light selected-filters" *ngFor="let facet of selectedFacets" (click)="onFacetSelection(false, facet.type, facet.field, facet)">{{facet.dispVal}}</label>
         </div>
@@ -31,7 +30,10 @@
       <div class="row" *ngIf="res.response.numFound > 0">
         <div class="col-6 mt-2 d-md-none">
           <button class="btn btn-outline-secondary col-12" type="button" (click)="hideFilters()">
-            Filter by
+            Filter by 
+            <ng-template [ngIf]="selectedFacets.length > 0">                     
+               <span class="badge badge-secondary">{{selectedFacets.length}}</span>
+            </ng-template>
             <i class="fa fa-filter"></i>
           </button>
         </div>
@@ -121,12 +123,26 @@
       </div>
 
 
-      <div class="row d-md-none pl-3 mt-2 text-white">
-          <div class="col-9 facets border rounded bg-dark" [@filtersState]="filtersState" *ngIf="res.response.numFound > 0 && showFiltersBool">
-            <ul class="list-unstyled mt-2">
+      <div class="row d-md-none mt-2 text-white">
+          <div class="col-9 facets bg-dark" [@filtersState]="filtersState" *ngIf="res.response.numFound > 0 && showFiltersBool">
+              
+              <div class="row">
+              <div class="col-12 mt-3" *ngIf="selectedFacets.length > 0">
+                  <button title="Clear All" class="btn btn-outline-light" (click)=onClearAll()>
+                      <h6 class=" m-0">CLEAR ALL</h6>
+                  </button>
+                </div>
+              </div>
+            
+            <div class="row" *ngIf="selectedFacets.length > 0">
+                  <div class="col-md-12 text-white mt-2">
+                    <label class="mr-3 mt-2 border rounded pl-1 pr-1 selected-filters" *ngFor="let facet of selectedFacets" (click)="onFacetSelection(false, facet.type, facet.field, facet)">{{facet.dispVal}}</label>
+                  </div>
+                  </div>
+            <ul class="list-unstyled">
               <li class="mb-4 p-1 border-bottom" *ngFor="let facetField of facetFields">
-                <h6>{{facetFieldMap.get(facetField.field)}}</h6>
-                <ul *ngIf="facetField.facetFieldDetails.length > 0" class="list-unstyled">
+                <h5>{{facetFieldMap.get(facetField.field)}}</h5>
+                <ul *ngIf="facetField.facetFieldDetails.length > 0" class="list-unstyled ml-4">
   
                   <li [title]="facetDetail.value" *ngFor="let facetDetail of facetField.facetFieldDetails"
                   (click)="facetDetail.count > 0 ? onFacetSelection(!facetDetail.checked, facetField.type, facetField.field, facetDetail) : null"
@@ -148,8 +164,8 @@
             </ul>
             <ul class="list-unstyled mt-2">
               <li class="mb-4 p-1 border-bottom" *ngFor="let facetRange of facetRanges">
-                <h6>{{facetFieldMap.get(facetRange.field)}}</h6>
-                <ul *ngIf="facetRange.facetRangeDetails.length > 0" class="list-unstyled">
+                <h5>{{facetFieldMap.get(facetRange.field)}}</h5>
+                <ul *ngIf="facetRange.facetRangeDetails.length > 0" class="list-unstyled ml-4">
   
                   <li title="{{facetDetail.dispVal}}" *ngFor="let facetDetail of facetRange.facetRangeDetails"
                   (click)="facetDetail.count > 0 ? onFacetSelection(!facetDetail.checked, facetRange.type, facetRange.field, facetDetail) : null"

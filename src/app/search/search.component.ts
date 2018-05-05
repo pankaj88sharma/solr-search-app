@@ -30,9 +30,9 @@ import {
         animate('200ms ease-in-out')
       ]),
       transition('* => void', [
-        animate('200ms ease-in-out', style({
+        animate('300ms ease-in-out', style({
           opacity: 0,
-          transform: 'translateX(100%)'
+          transform: 'translateX(-100%)'
         }))
       ])
     ]),
