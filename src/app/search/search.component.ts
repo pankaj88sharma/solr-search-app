@@ -61,6 +61,14 @@ import {
       transition('* => void', [
         animate(200, style({ opacity: 0 }))
       ])
+    ]),
+    trigger('viewType', [
+      transition('* => *', [
+        style({
+          opacity: 0
+        }),
+        animate('400ms ease-in-out')
+      ])
     ])
   ]
 })
@@ -97,6 +105,8 @@ export class SearchComponent implements OnInit {
   searchQuery: string;
 
   start: number = 0;
+
+  viewType = 'card';
 
   sortFields = SORT_FIELDS;
   selectedSortField = this.sortFields[0];
@@ -266,6 +276,10 @@ export class SearchComponent implements OnInit {
   onBlurMethod() {
     // console.log("blur");
     this.suggestions = [];
+  }
+
+  toggleView(){
+    this.viewType = this.viewType === 'card' ? 'detail' : 'card';
   }
 
   getSuggestionsOrExecuteSearch(query: string, event: any) {
