@@ -29,7 +29,7 @@
       </div>
       <div class="row" *ngIf="res.response.numFound > 0">
         <div class="col-6 mt-2 d-md-none">
-          <button class="btn btn-outline-secondary col-12" type="button" (click)="toggleFilters()" (blur)="hideFilters()">
+          <button tabindex="1" class="btn btn-outline-secondary col-12" type="button" (click)="toggleFilters()" (blur)="hideFilters()">
             Filter by 
             <ng-template [ngIf]="selectedFacets.length > 0">                     
                <span class="badge badge-secondary">{{selectedFacets.length}}</span>
@@ -43,7 +43,7 @@
          
 
                 <div class="dropdown">
-                    <button class="btn btn-outline-secondary col-12 pl-0 pr-0" type="button" (click)="toggleSortState()" (blur)="hideSort()">
+                    <button tabindex="1" class="btn btn-outline-secondary col-12 pl-0 pr-0" type="button" (click)="toggleSortState()" (blur)="hideSort()">
                       {{selectedSortField.value}} <i class="fa fa-sort"></i>
                     </button>
                     <div class="suggestions-result col-12 pl-0 pr-0" *ngIf="showSortDiv">
