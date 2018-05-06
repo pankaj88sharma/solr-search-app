@@ -29,7 +29,7 @@
       </div>
       <div class="row" *ngIf="res.response.numFound > 0">
         <div class="col-6 mt-2 d-md-none">
-          <button class="btn btn-outline-secondary col-12" type="button" (click)="toggleFilters()" (focusout)="hideFilters()">
+          <button class="btn btn-outline-secondary col-12" type="button" (click)="toggleFilters()" (blur)="hideFilters()">
             Filter by 
             <ng-template [ngIf]="selectedFacets.length > 0">                     
                <span class="badge badge-secondary">{{selectedFacets.length}}</span>
@@ -43,11 +43,11 @@
          
 
                 <div class="dropdown">
-                    <button class="btn btn-outline-secondary col-12" type="button" (click)="toggleSortState()" (focusout)="hideSort()">
+                    <button class="btn btn-outline-secondary col-12 pl-0 pr-0" type="button" (click)="toggleSortState()" (blur)="hideSort()">
                       {{selectedSortField.value}} <i class="fa fa-sort"></i>
                     </button>
                     <div class="suggestions-result col-12 pl-0 pr-0" *ngIf="showSortDiv">
-                      <a class="list-group-item list-group-item-action bg-dark text-white border-bottom border-white" *ngFor="let sortField of sortFields" [ngClass]="{'font-weight-bold': sortField.id == selectedSortField.id }" (mousedown)="sortField.id == selectedSortField.id? null:onSortFieldChange(sortField)" href="#">{{sortField.value}}</a>
+                      <a class="list-group-item pl-2 pr-0 list-group-item-action bg-dark text-white border-bottom border-white" *ngFor="let sortField of sortFields" [ngClass]="{'font-weight-bold': sortField.id == selectedSortField.id }" (mousedown)="sortField.id == selectedSortField.id? null:onSortFieldChange(sortField)" href="#">{{sortField.value}}</a>
                     </div>
                   </div>
 
@@ -215,7 +215,7 @@
         <div class="col-md-8 mt-2 mt-md-3">
           <div class="input-group">
             <input #searchedText [value]="searchQuery?searchQuery:''" type="text" class="form-control form-control-lg" placeholder="Search..."
-              (keyup)="getSuggestionsOrExecuteSearch(searchedText.value, $event)" (focusout)="onBlurMethod()" />
+              (keyup)="getSuggestionsOrExecuteSearch(searchedText.value, $event)" (blur)="onBlurMethod()" />
 
             <div class="list-group mt-5 col-md-12 pl-0 pr-5" [@suggestionsState]="suggestionsState" *ngIf="suggestions.length > 0" [ngClass]="{'suggestions-result': suggestions.length > 0}">
               <a href="#" [innerHtml]=suggest.dispVal class="list-group-item list-group-item-action pt-1 pb-1 pl-3 text-dark border-secondary" *ngFor="let suggest of suggestions"
