@@ -125,9 +125,22 @@ export class SearchComponent implements OnInit {
 
   hideFilters() {
     //console.log(this.filtersState);
+    this.showFiltersBool = false;
+    this.filtersState = 'hide';
+    //console.log(this.filtersState);
+  }
+  
+  
+  toggleFilters() {
+    //console.log(this.filtersState);
     this.showFiltersBool = !this.showFiltersBool;
     this.filtersState = this.filtersState === 'show' ? 'hide' : 'show';
     //console.log(this.filtersState);
+  }
+
+  hideSort() {
+    this.showSortDiv = false;
+    this.sortState = 'hide';
   }
 
   toggleSortState() {
@@ -462,6 +475,10 @@ export class SearchComponent implements OnInit {
 
   purchase(url: string) {
     window.open(url,'_blank');
+  }
+
+  onFilterfocusOut() {
+    console.log("focus out");
   }
 
 

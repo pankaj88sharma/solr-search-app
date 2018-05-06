@@ -29,7 +29,7 @@
       </div>
       <div class="row" *ngIf="res.response.numFound > 0">
         <div class="col-6 mt-2 d-md-none">
-          <button class="btn btn-outline-secondary col-12" type="button" (click)="hideFilters()">
+          <button class="btn btn-outline-secondary col-12" type="button" (click)="toggleFilters()" (focusout)="hideFilters()">
             Filter by 
             <ng-template [ngIf]="selectedFacets.length > 0">                     
                <span class="badge badge-secondary">{{selectedFacets.length}}</span>
@@ -39,16 +39,24 @@
         </div>
 
 
-      <div class="col-6 d-md-none">
-          <div class="row justify-content-end">
-            <div class="col-12">
-              <div class="mt-2 input-group mb-2">
-                <select class="custom-select" [(ngModel)]="selectedSortField" (change)="onSortFieldChange(selectedSortField)">
+      <div class="col-6 mt-2 d-md-none">
+         
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary col-12" type="button" (click)="toggleSortState()" (focusout)="hideSort()">
+                      {{selectedSortField.value}} <i class="fa fa-sort"></i>
+                    </button>
+                    <div class="suggestions-result col-12 pl-0 pr-0" *ngIf="showSortDiv">
+                      <a class="list-group-item list-group-item-action bg-dark text-white border-bottom border-white" *ngFor="let sortField of sortFields" [ngClass]="{'font-weight-bold': sortField.id == selectedSortField.id }" (mousedown)="sortField.id == selectedSortField.id? null:onSortFieldChange(sortField)" href="#">{{sortField.value}}</a>
+                    </div>
+                  </div>
+
+              <!--div class="mt-2 input-group mb-2 text-center">
+                <select class="custom-select btn btn-outline-secondary border border-secondary" [(ngModel)]="selectedSortField" (change)="onSortFieldChange(selectedSortField)">
                   <option class="sort-div" *ngFor="let sortField of sortFields" [ngValue]="sortField">{{sortField.value}}</option>
                 </select>
-              </div>
-            </div>
-          </div>
+              </div-->
+            
         </div>
 
         <!--div class="col-6 mt-3 d-md-none text-right">
@@ -128,7 +136,7 @@
               
               <div class="row">
               <div class="col-12 mt-3" *ngIf="selectedFacets.length > 0">
-                  <button title="Clear All" class="btn btn-outline-light" (click)=onClearAll()>
+                  <button title="Clear All" class="btn btn-outline-light" (mousedown)=onClearAll()>
                       <h6 class=" m-0">CLEAR ALL</h6>
                   </button>
                 </div>
@@ -136,7 +144,7 @@
             
             <div class="row" *ngIf="selectedFacets.length > 0">
                   <div class="col-md-12 text-white mt-2">
-                    <label class="mr-3 mt-2 border rounded pl-1 pr-1 selected-filters" *ngFor="let facet of selectedFacets" (click)="onFacetSelection(false, facet.type, facet.field, facet)">{{facet.dispVal}}</label>
+                    <label class="mr-3 mt-2 border rounded pl-1 pr-1 selected-filters" *ngFor="let facet of selectedFacets" (mousedown)="onFacetSelection(false, facet.type, facet.field, facet)">{{facet.dispVal}}</label>
                   </div>
                   </div>
                <div class="row">  
@@ -147,7 +155,7 @@
                 <ul *ngIf="facetField.facetFieldDetails.length > 0" class="list-unstyled ml-4">
   
                   <li [title]="facetDetail.value" *ngFor="let facetDetail of facetField.facetFieldDetails"
-                  (click)="facetDetail.count > 0 ? onFacetSelection(!facetDetail.checked, facetField.type, facetField.field, facetDetail) : null"
+                  (mousedown)="facetDetail.count > 0 ? onFacetSelection(!facetDetail.checked, facetField.type, facetField.field, facetDetail) : null"
                   [ngClass]="{'filter-item': facetDetail.count > 0}">
                     <div class="row">
                       <div class="col-9 pr-0 facets-text pr-0">
@@ -174,7 +182,7 @@
                 <ul *ngIf="facetRange.facetRangeDetails.length > 0" class="list-unstyled ml-4">
   
                   <li title="{{facetDetail.dispVal}}" *ngFor="let facetDetail of facetRange.facetRangeDetails"
-                  (click)="facetDetail.count > 0 ? onFacetSelection(!facetDetail.checked, facetRange.type, facetRange.field, facetDetail) : null"
+                  (mousedown)="facetDetail.count > 0 ? onFacetSelection(!facetDetail.checked, facetRange.type, facetRange.field, facetDetail) : null"
                   [ngClass]="{'filter-item': facetDetail.count > 0}" >
                     <div class="row">
                       <div class="col-9 facets-text pr-0">
@@ -207,7 +215,7 @@
         <div class="col-md-8 mt-2 mt-md-3">
           <div class="input-group">
             <input #searchedText [value]="searchQuery?searchQuery:''" type="text" class="form-control form-control-lg" placeholder="Search..."
-              (keyup)="getSuggestionsOrExecuteSearch(searchedText.value, $event)" (blur)="onBlurMethod()" />
+              (keyup)="getSuggestionsOrExecuteSearch(searchedText.value, $event)" (focusout)="onBlurMethod()" />
 
             <div class="list-group mt-5 col-md-12 pl-0 pr-5" [@suggestionsState]="suggestionsState" *ngIf="suggestions.length > 0" [ngClass]="{'suggestions-result': suggestions.length > 0}">
               <a href="#" [innerHtml]=suggest.dispVal class="list-group-item list-group-item-action pt-1 pb-1 pl-3 text-dark border-secondary" *ngFor="let suggest of suggestions"
